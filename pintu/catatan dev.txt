@@ -1,0 +1,185 @@
+====================
+MEMBUAT API untuk menarik data dari SIPP Versi Web
+
+1. buat folder baru di public html > api-patilamuta1
+2. buat file api_sync.php
+================isi api_sync.php============================
+<?php
+// api_sync.php - Versi dengan Mode Per Tahun
+
+// 1. Paksa Tampilkan Error (untuk testing)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('memory_limit', '512M');
+set_time_limit(0);
+
+// ==========================================
+// 1. KONFIGURASI KEAMANAN
+// ==========================================
+$secret_token = '##contohP471lamu74ye$_TOKEN_RAHASIA_ANDA_YANG_SANGAT_PANJANG33'; //buat token  rahasia dengan perpaduan angka huruf dan simbol
+$provided_token = isset($_GET['token']) ? $_GET['token'] : '';
+
+if ($provided_token !== $secret_token) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Akses ditolak. Token tidak valid.')));
+}
+
+// ==========================================
+// 2. KONFIGURASI DATABASE SIPP Versi WEB
+// ==========================================
+$host = '127.0.0.1';
+$user = '##contohpatilam1_api_sipp31533'; //isi dengan user db anda
+$pass = '##contoh466/IMB-BLM/VI/2026@33'; //isi dengan password user db anda
+$db   = '##contohpatilam1_sipp31533'; //isi dengan nama db sipp versi web
+
+$mysqli = new mysqli($host, $user, $pass, $db);
+
+if (!$mysqli->set_charset('utf8mb4')) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Gagal mengatur charset: ' . $mysqli->error)));
+}
+
+if ($mysqli->connect_error) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Koneksi database gagal: ' . $mysqli->connect_error)));
+}
+
+// ==========================================
+// 3. PARAMETER PAGINATION & MODE
+// ==========================================
+// Mode yang tersedia:
+//   - full         : Ambil SEMUA data (untuk sinkronisasi pertama)
+//   - current_year : Ambil data TAHUN BERJALAN (default, untuk sinkron rutin)
+//   - year         : Ambil data TAHUN TERTENTU (wajib menyertakan &year=YYYY)
+// ==========================================
+$mode = isset($_GET['mode']) ? $_GET['mode'] : 'current_year';
+$year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y'); // Default tahun berjalan
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 500;
+$offset = ($page - 1) * $limit;
+
+// Validasi mode
+$allowed_modes = array('full', 'current_year', 'year');
+if (!in_array($mode, $allowed_modes)) {
+    http_response_code(400);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Mode tidak valid. Pilih: full, current_year, atau year.')));
+}
+
+// Validasi tahun jika mode=year
+if ($mode === 'year' && ($year < 1900 || $year > 2100)) {
+    http_response_code(400);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Tahun tidak valid. Masukkan tahun antara 1900-2100.')));
+}
+
+// ==========================================
+// 4. HITUNG TOTAL DATA
+// ==========================================
+if ($mode === 'full') {
+    $count_query = "SELECT COUNT(*) as total FROM dataumumweb";
+} else if ($mode === 'year') {
+    $count_query = "SELECT COUNT(*) as total FROM dataumumweb WHERE YEAR(tglPendaftaran) = $year";
+} else { // current_year
+    $count_query = "SELECT COUNT(*) as total FROM dataumumweb WHERE YEAR(tglPendaftaran) = YEAR(CURDATE())";
+}
+
+$count_result = $mysqli->query($count_query);
+if (!$count_result) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Query count gagal: ' . $mysqli->error)));
+}
+$total_rows = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_rows / $limit);
+
+// ==========================================
+// 5. AMBIL DATA SESUAI HALAMAN & MODE
+// ==========================================
+if ($mode === 'full') {
+    $query = "SELECT * FROM dataumumweb ORDER BY tglPendaftaran ASC LIMIT $offset, $limit";
+} else if ($mode === 'year') {
+    $query = "SELECT * FROM dataumumweb 
+              WHERE YEAR(tglPendaftaran) = $year 
+              ORDER BY tglPendaftaran ASC LIMIT $offset, $limit";
+} else { // current_year
+    $query = "SELECT * FROM dataumumweb 
+              WHERE YEAR(tglPendaftaran) = YEAR(CURDATE()) 
+              ORDER BY tglPendaftaran ASC LIMIT $offset, $limit";
+}
+
+$result = $mysqli->query($query);
+$data = array();
+
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+} else {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    die(json_encode(array('error' => 'Query gagal: ' . $mysqli->error)));
+}
+
+// ==========================================
+// 6. SANITASI DATA (Bersihkan Karakter UTF-8 yang Rusak)
+// ==========================================
+function sanitize_utf8(&$array) {
+    foreach ($array as &$value) {
+        if (is_array($value)) {
+            sanitize_utf8($value);
+        } else if (is_string($value)) {
+            $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        }
+    }
+}
+sanitize_utf8($data);
+
+// ==========================================
+// 7. KELUARKAN RESPON JSON
+// ==========================================
+header('Content-Type: application/json');
+
+$response = array(
+    'status' => 'success',
+    'mode' => $mode,
+    'page' => $page,
+    'limit' => $limit,
+    'total_rows' => (int)$total_rows,
+    'total_pages' => (int)$total_pages,
+    'data' => $data
+);
+
+// Tambahkan info tahun ke respons jika mode-nya year atau current_year
+if ($mode === 'year') {
+    $response['year'] = $year;
+} else if ($mode === 'current_year') {
+    $response['year'] = (int)date('Y');
+}
+
+$json_output = json_encode($response);
+
+if ($json_output === false) {
+    http_response_code(500);
+    echo json_encode(array('error' => 'Gagal encode JSON: ' . json_last_error_msg()));
+} else {
+    echo $json_output;
+}
+
+$mysqli->close();
+?>
+================isi api_sync.php============================
+
+====== CARA TES CEPAT  api_sync SUDAH BERFUNGSI ATAU BELOM ==============
+ 1. Buka Browser kamudian input link berikut :
+Mode Full (semua data):
+https://pa-tilamuta.go.id/api-patilamuta1/api_sync.php?token=...&mode=full&page=1&limit=500
+
+Mode Current Year (tahun berjalan, default):
+https://pa-tilamuta.go.id/api-patilamuta1/api_sync.php?token=...&page=1&limit=500
+
+Mode Year (tahun 20....):
+https://pa-tilamuta.go.id/api-patilamuta1/api_sync.php?token=...&mode=year&year=2024&page=1&limit=500

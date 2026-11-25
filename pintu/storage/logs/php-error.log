@@ -1,0 +1,29 @@
+[20-Sep-2026 08:39:50 Asia/Makassar] [PINTU] DB connect error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[21-Sep-2026 00:43:47 Asia/Makassar] [PINTU worker] Mulai sync...
+[21-Sep-2026 00:43:48 Asia/Makassar] [PINTU worker] Total halaman: 1
+[21-Sep-2026 00:44:11 Asia/Makassar] [PINTU worker] Halaman 1 selesai. I=0 U=443 F=0
+[21-Sep-2026 00:44:11 Asia/Makassar] [PINTU worker] Selesai. Status=SUCCESS I=0 U=443 F=0
+[21-Sep-2026 19:20:51 Asia/Makassar] PHP Warning:  session_name(): Session name cannot be changed after headers have already been sent in C:\xampp\htdocs\pintu\includes\bootstrap.php on line 19
+[21-Sep-2026 19:20:51 Asia/Makassar] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed after headers have already been sent in C:\xampp\htdocs\pintu\includes\bootstrap.php on line 25
+[21-Sep-2026 19:20:51 Asia/Makassar] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\pintu\includes\bootstrap.php on line 27
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] Bootstrap loaded.
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] Database terkoneksi.
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] Tidak ada baris sync_daily hari ini.
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] FORCE mode: membuat lock baru...
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] Lock dibuat.
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] Config: url=https://pa-tilamuta.go.id/api-patilamuta1/api_sync.php, limit=500, timeout=90
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] cURL OK.
+[21-Sep-2026 19:20:51 Asia/Makassar] [PINTU worker] Mulai sync...
+[21-Sep-2026 19:20:53 Asia/Makassar] [PINTU worker] Total halaman: 1
+[21-Sep-2026 19:21:14 Asia/Makassar] [PINTU worker] Halaman 1 selesai. I=1 U=443 F=0
+[21-Sep-2026 19:21:14 Asia/Makassar] [PINTU worker] Selesai. Status=SUCCESS I=1 U=443 F=0
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] Bootstrap loaded.
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] Database terkoneksi.
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] Baris sync_daily ditemukan. status=FAILED, current_page=1, total_pages=1
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] FORCE mode: reset status ke RUNNING...
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] Config: url=https://pa-tilamuta.go.id/api-patilamuta1/api_sync.php, limit=500, timeout=90
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] cURL OK. Mulai proses sinkronisasi...
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] Fetch halaman 1...
+[21-Sep-2026 19:24:37 Asia/Makassar] [PINTU worker] Total halaman: 1
+[21-Sep-2026 19:25:00 Asia/Makassar] [PINTU worker] Halaman 1 selesai. I=0 U=444 F=0
+[21-Sep-2026 19:25:00 Asia/Makassar] [PINTU worker] === SELESAI. Status=SUCCESS I=0 U=444 F=0 ===
